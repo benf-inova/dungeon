@@ -164,6 +164,8 @@ class Dungeon:
     def clean_keychain(self):
         for key in self.keys:
             if self.keys[key] is None:
+                self.map[key[0]][key[1]] = self.char_map['FLOOR']
+                self.floor_tiles.append(self.keys[key])
                 del self.keys[key]
 
     # Given the coordinate for where a door should be placed, generate the dimensions for a room that would start there
@@ -249,13 +251,13 @@ class Dungeon:
                     break
             self.generate_random_room(next_room[0], next_room[1])
 
+        # clean out any keys that didn't get used
+        self.clean_keychain()
+
         # randomly place exit in dungeon
         exit = choice(self.floor_tiles)
         self.map[exit[0]][exit[1]] = self.char_map['EXIT']
         self.floor_tiles.remove(exit)
-
-        # clean out any keys that didn't get used
-        self.clean_keychain()
 
 if __name__ == "__main__":
     # A Quick Example Usage

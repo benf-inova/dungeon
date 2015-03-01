@@ -12,6 +12,10 @@ Class for generating a random rogue-like dungeon
 *- other terrain types*  
 *- obstacles (fire, water, pits, traps)*  
 
+**Demonstration**
+For a quick demonstration a main program path has been added to the class that creates a Dungeon 'object', generates a random layout, and outputs both the map and the list of keys showing the coordinates of the keys and the coordinates of the doors each key unlocks.  To run simply call dungeon.py from a python interpreter.  
+`ex: python dungeon.py`
+
 **Generating a Dungeon**  
 1. Create an instance of a Dungeon 'object' providing the dungeon's:  
 * Height  
@@ -23,4 +27,4 @@ Class for generating a random rogue-like dungeon
 
 **Printing a Dungeon**  
 1. Pass your dungeon 'object' to the print command  
-    `ex: print(my_dungeon)`  
+`ex: print(my_dungeon)`  
