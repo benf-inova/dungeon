@@ -1,3 +1,4 @@
+from copy import deepcopy
 from random import choice, randint
 
 
@@ -7,6 +8,12 @@ class Dungeon:
     floor_tiles = []
     wall_tiles = []
     keys = []
+
+    # Weights for randomized generation
+    hallway_weights = [True] + [False]*2            # Should this room be a hallway?
+    locked_door_weights = [True] + [False]*2        # Should the door to this room be locked?
+    place_key_weights = [True] + [False]*7          # Should we place a key in this room?
+    treasure_ammount_weights = [0]*3 + [1]*2 + [2]  # How much treasure should we try to place in this room?
 
     # Character representations
     char_map = {
@@ -100,11 +107,10 @@ class Dungeon:
             found_key = False
             for key in self.keys:
                 if self.keys[key] is None:
-                    weights = [True] + [False]*2
-                    choice(weights)
-                    self.keys[key] = (door_y, door_x)
-                    found_key = True
-                    break
+                    if choice(self.locked_door_weights):
+                        self.keys[key] = (door_y, door_x)
+                        found_key = True
+                        break
             self.map[door_y][door_x] = self.char_map['LOCKED_DOOR'] if found_key else self.char_map['UNLOCKED_DOOR']
             self.wall_tiles.remove((door_y, door_x))
 
@@ -138,31 +144,30 @@ class Dungeon:
 
     # Given the dimensions of a room, generate random amount of treasure
     def place_treasure(self, y1, x1, y2, x2):
-        weights = [0]*3 + [1]*2 + [2]
-        amount = choice(weights)
+        amount = choice(self.treasure_ammount_weights)
         for i in range(amount):
             treasure_y = randint(y1, y2)
             treasure_x = randint(x1, x2)
-            self.map[treasure_y][treasure_x] = self.char_map['TREASURE']
             if (treasure_y, treasure_x) in self.floor_tiles:
+                self.map[treasure_y][treasure_x] = self.char_map['TREASURE']
                 self.floor_tiles.remove((treasure_y, treasure_x))
 
     # Given the dimensions of a room, randomly generate a key in this room or not
     def place_key(self, y1, x1, y2, x2):
         # Decide whether to place a key in this room or not
-        weights = [True] + [False]*7
-        place_key = choice(weights)
+        place_key = choice(self.place_key_weights)
         if place_key:
             key_y = randint(y1, y2)
             key_x = randint(x1, x2)
-            self.keys[(key_y, key_x)] = None
-            self.map[key_y][key_x] = self.char_map['KEY']
             if (key_y, key_x) in self.floor_tiles:
+                self.keys[(key_y, key_x)] = None
+                self.map[key_y][key_x] = self.char_map['KEY']
                 self.floor_tiles.remove((key_y, key_x))
 
     # Removes any keys that don't map to a door
     def clean_keychain(self):
-        for key in self.keys:
+        looping_keychain = deepcopy(self.keys)
+        for key in looping_keychain:
             if self.keys[key] is None:
                 self.map[key[0]][key[1]] = self.char_map['FLOOR']
                 self.floor_tiles.append(self.keys[key])
@@ -189,8 +194,7 @@ class Dungeon:
         direction = choice(['Up', 'Right', 'Down', 'Left']) if direction is None else direction
 
         # randomly pick if this will be an expanded room or a hallway
-        weights = [True] + [False]*2
-        hallway = choice(weights)
+        hallway = choice(self.hallway_weights)
 
         # adjust coordinates, for hallways set width to 3 to include walls and put the door in the middle
         if direction == 'Up':
@@ -223,8 +227,8 @@ class Dungeon:
             self.place_walls(y_start, x_start, y_end, x_end)
 
             if not hallway:
-                self.place_treasure(y_start+1, x_start+1, y_end-1, x_end-1)
                 self.place_key(y_start+1, x_start+1, y_end-1, x_end-1)
+                self.place_treasure(y_start+1, x_start+1, y_end-1, x_end-1)
 
             return True
         else:
